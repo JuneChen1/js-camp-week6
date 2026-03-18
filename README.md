@@ -95,7 +95,6 @@ POST   /api/livejs/v1/customer/{api_path}/carts        加入購物車
 PATCH  /api/livejs/v1/customer/{api_path}/carts        編輯購物車數量
 DELETE /api/livejs/v1/customer/{api_path}/carts        清空購物車
 DELETE /api/livejs/v1/customer/{api_path}/carts/{id}   刪除特定購物車商品
-POST   /api/livejs/v1/customer/{api_path}/orders       送出訂單
 
 ```
 
