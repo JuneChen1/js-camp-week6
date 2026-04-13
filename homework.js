@@ -22,11 +22,9 @@ const ADMIN_TOKEN = process.env.API_KEY;
  * @returns {Promise<Array>} - 回傳 products 陣列
  */
 async function getProducts() {
-	// 請實作此函式
-	// 提示：
-	// 1. 使用 fetch() 發送 GET 請求
-	// 2. 使用 response.json() 解析回應
-	// 3. 回傳 data.products
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/products`);
+	const data = await response.json();
+	return data.products
 }
 
 /**
@@ -34,7 +32,13 @@ async function getProducts() {
  * @returns {Promise<Object>} - 回傳 { carts: [...], total: 數字, finalTotal: 數字 }
  */
 async function getCart() {
-	// 請實作此函式
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/carts`);
+	const data = await response.json();
+	return {
+		carts: data.carts,
+		total: data.total,
+		finalTotal: data.finalTotal
+	}
 }
 
 /**
@@ -42,12 +46,18 @@ async function getCart() {
  * @returns {Promise<Object>} - 回傳 { success: boolean, data?: [...], error?: string }
  */
 async function getProductsSafe() {
-	// 請實作此函式
-	// 提示：
-	// 1. 加上 try-catch 處理錯誤
-	// 2. 檢查 response.ok 判斷是否成功
-	// 3. 成功回傳 { success: true, data: [...] }
-	// 4. 失敗回傳 { success: false, error: '錯誤訊息' }
+	try {
+		const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/products`);
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(data.message);
+		}
+		
+		return { success: true, data: data.products };
+	} catch (error) {
+		return { success: false, error: error.message };
+	}
 }
 
 // ========================================
@@ -61,12 +71,13 @@ async function getProductsSafe() {
  * @returns {Promise<Object>} - 回傳更新後的購物車資料
  */
 async function addToCart(productId, quantity) {
-	// 請實作此函式
-	// 提示：
-	// 1. 發送 POST 請求
-	// 2. body 格式：{ data: { productId: "xxx", quantity: 1 } }
-	// 3. 記得設定 headers: { 'Content-Type': 'application/json' }
-	// 4. body 要用 JSON.stringify() 轉換
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/carts`,
+		{
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ data: { productId, quantity } })
+		});
+	return await response.json();
 }
 
 /**
@@ -76,10 +87,14 @@ async function addToCart(productId, quantity) {
  * @returns {Promise<Object>} - 回傳更新後的購物車資料
  */
 async function updateCartItem(cartId, quantity) {
-	// 請實作此函式
-	// 提示：
-	// 1. 發送 PATCH 請求
-	// 2. body 格式：{ data: { id: "購物車ID", quantity: 數量 } }
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/carts`,
+		{
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ data: { id: cartId, quantity } })
+		});
+
+	return await response.json();
 }
 
 /**
@@ -88,8 +103,9 @@ async function updateCartItem(cartId, quantity) {
  * @returns {Promise<Object>} - 回傳更新後的購物車資料
  */
 async function removeCartItem(cartId) {
-	// 請實作此函式
-	// 提示：發送 DELETE 請求到 /carts/{id}
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/carts/${cartId}`, { method: 'DELETE' });
+
+	return await response.json();
 }
 
 /**
@@ -97,8 +113,9 @@ async function removeCartItem(cartId) {
  * @returns {Promise<Object>} - 回傳清空後的購物車資料
  */
 async function clearCart() {
-	// 請實作此函式
-	// 提示：發送 DELETE 請求到 /carts
+	const response = await fetch(`${BASE_URL}/api/livejs/v1/customer/${API_PATH}/carts`, { method: 'DELETE' });
+
+	return await response.json();
 }
 
 // ========================================
@@ -110,12 +127,30 @@ async function clearCart() {
 
 1. HTTP 狀態碼的分類（1xx, 2xx, 3xx, 4xx, 5xx 各代表什麼）
    答：
+	 1xx(資訊回應)：代表請求已接收，繼續處理。例如"100 Continue"代表應客戶端應繼續傳送請求，如果請求已完成，則忽略此回應。
+	 2xx(成功回應)：請求已成功接收、理解與接受。例如"200 OK"代表請求成功。
+	 3xx(重新導向)：需要進一步的操作以完成請求。例如"302 Found"代表需執行臨時重新導向，但客戶端在以後的請求依然需使用相同的網址。
+	 4xx(用戶端錯誤)：請求包含錯誤語法，或是無法完成。例如"404 Not Found"代表伺服器找不到請求的資源。
+	 5xx(伺服器端錯誤)：伺服器未能完成有效的請求。例如"500 Internal Server Error"代表伺服器遇到意料之外的狀況。
 
 2. GET、POST、PATCH、PUT、DELETE 的差異
    答：
+	 GET(讀取)：請求特定資源。
+	 POST(新增)：建立新的資源。
+	 PATCH(部分更新)：修改現有資源的部分欄位。
+	 PUT(完整替換)：完整替換資源，如果資源不存在，則新增。
+	 DELETE(刪除)：刪除指定的資源。
 
 3. 什麼是 RESTful API？
    答：
+	 應用程式介面 (API) 讓應用程式之間能相互溝通、交換資料，而 REST 是一種 API 的架構風格，使用 RESTful API 進行標準化，可以降低開發者之間的溝通成本。
+
+	 核心概念：
+	 1. 以資源為中心：將網路上的所有內容視為資源，並為每個資源分配一個唯一的網址（URL）。
+	 2. 利用 HTTP 動詞：直接使用 HTTP 通訊協定的原生動作來操作資源。
+	 3. 無狀態性：伺服器不會儲存客戶端的任何資訊，每次發請求時，都必須包含完成該操作所需的所有資料(Token)，有助於系統的擴展與穩定性。
+	 4. 資料格式：使用 JSON 格式來傳輸資料。
+
 
 
 */
